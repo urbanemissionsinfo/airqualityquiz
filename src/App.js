@@ -8,13 +8,13 @@ function csvToQuestions(csvString) {
   const lines = csvString.trim().split("\n");
   const headers = lines[0].split(",");
   const questions = [];
+  
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(",");
     const questionId = values[0];
     const questionText = values[1];
     const obj = { a: 2, b: 3, c: 4, d: 5 };
     const correctAnswerIndex = obj[values[6].replace("\r", "")]; // Assuming 'correct_ans' is at index 6
-
     const options = [];
     for (let j = 2; j <= 5; j++) {
       options.push({
@@ -23,7 +23,7 @@ function csvToQuestions(csvString) {
         isCorrect: j === correctAnswerIndex,
       });
     }
-
+    
     questions.push({
       id: questionId,
       text: questionText,
@@ -31,19 +31,17 @@ function csvToQuestions(csvString) {
       answer_explanation: values[7]
     });
   }
-
   // Shuffle the questions array once (using Fisher-Yates algorithm)
   for (let i = questions.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [questions[i], questions[j]] = [questions[j], questions[i]];
-  }
-
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];}
   const selected_questions = questions.slice(0,10);
   return selected_questions;
 }
 
-// Quiz Component (reusable)
+// QUIZ COMPONENT (reusable)
 function Quiz({ googleSheetURL, quizTitle }) {
+  // State Variables
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
@@ -91,40 +89,23 @@ function Quiz({ googleSheetURL, quizTitle }) {
     console.log("qids in useEffect:", qids); // Correct: Shows the updated array
 }, [qids]); // This useEffect runs whenever qids changes
 
-
-  const optionClicked = (isCorrect, option, correctAnswerText, answerExplanationText) => {
+  // Function to change score and show feedback after option click
+  const optionClicked = (isCorrect, option) => {
+    // Save first option clicked
     if (!selectedOption) {
     responses.push(option.id);
     }
-      if (isCorrect) {
+    
+    if (isCorrect) {
         if (!selectedOption) { // Only allow click if no option is selected yet
           setScore(score + 1);
           setFeedback("Correct :) !");
         }
       } else {setFeedback("Incorrect :( ");}  
-    setSelectedOption(option);
+    
+    setSelectedOption(option); // This ensures that there is no change in responses, score and feedback when user clicks other options
     console.log(responses);
     setShowNextButton(true); // Show the "Next Question" button
-
-
-  //   setTimeout(() => {  // Use setTimeout for the delay
-  //     if (currentQuestion + 1 < questions.length) {
-  //         setCurrentQuestion(currentQuestion + 1);
-  //         setSelectedOption(null); // Reset selected option for next question
-  //         setFeedback(null); // Reset feedback
-  //     } else {
-  //         setShowResults(true);
-  //     }
-      
-  // }, 5000); // 5000 milliseconds = 5 seconds
-
-    // if (currentQuestion + 1 < questions.length) {
-    //   setCurrentQuestion(currentQuestion + 1);
-    // } else {
-    //   setShowResults(true);
-    // }
-
-    // setSelectedOption(option);
   };
 
   const goToNextQuestion = () => {
@@ -133,9 +114,7 @@ function Quiz({ googleSheetURL, quizTitle }) {
         setSelectedOption(null);
         setFeedback(null);
         setShowNextButton(false); // Hide the button
-        // console.log(responses);
     } else {
-            
         saveScore();
         setShowResults(true);
         setFeedback(null);
@@ -153,17 +132,12 @@ const saveScore = async () => {
           question_ids: qids,
           responses: responses,
       };
-
       const response = await axios.post('https://airqualityquiz-backend.onrender.com/api/saveScore', scoreData); // Or your full URL if deployed
-
       console.log('Score saved successfully:', response.data); // Log the response from the server
-      // Optionally, you can show a success message to the user here
   } catch (error) {
-      console.error('Error saving score:', error);
-      // Display an error message to the user
+      console.error('Error saving score:', error); // Display an error message to the user
       if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
+          // The request was made and the server responded with a status code that falls out of the range of 2xx
           console.error("Response data:", error.response.data);
           console.error("Response status:", error.response.status);
           console.error("Response headers:", error.response.headers);
@@ -176,7 +150,6 @@ const saveScore = async () => {
           // Something happened in setting up the request that triggered an Error
           console.error("Error message:", error.message);
       }
-
   }
 };
 
@@ -191,12 +164,9 @@ const restartGame = () => {
   return (
     <div className="quiz-container"> {/* Add a class for styling */}
       <h1>{quizTitle}</h1> {/* Display the quiz title */}
-      <p> Each quiz has 10 questions selected from a pool of questions.
-        Participants are encouraged to take the test multiple times</p>
-      {(loading) ? (
-        <h2>Loading quiz...</h2>
-      ) : (
-        <>
+      <p> Each quiz has 10 questions selected from a pool of questions. Participants are encouraged to take the test multiple times</p>
+      {(loading) ? (<h2>Loading quiz...</h2>) : (
+        <> {/* React fragment start */}
           <h2>Score: {score}</h2>
           {showResults ? ( 
             <div className="final-results">
@@ -207,8 +177,7 @@ const restartGame = () => {
               </h2>
               <button onClick={() => restartGame()}>Restart game</button> <br></br>
               <Link to="/"><button>Home</button></Link> <br /> {/* Link to Home */}
-            </div>
-            
+            </div>  
           ) : (
             <div className="question-card">
               <h2>
@@ -217,10 +186,7 @@ const restartGame = () => {
               <h3 className="question-text">{questions[currentQuestion]?.text}</h3>
               <ul>
                 {questions[currentQuestion]?.options.map((option) => (
-                  <li key={option.id} onClick={() => (optionClicked(option.isCorrect,
-                                                                              option,
-                                                                              questions[currentQuestion]?.options.find(opt => opt.isCorrect)?.text,
-                                                                              questions[currentQuestion]?.answer_explanation))}>
+                  <li key={option.id} onClick={() => (optionClicked(option.isCorrect, option))}>
                     {option.text}
                   </li>
                 ))}
@@ -245,30 +211,31 @@ const restartGame = () => {
   );
 }
 
-
+// APP COMPONENT
 function App() {
-  const GOOGLE_SHEET_CSV_URL_1 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=0&single=true&output=csv"; // URL for Quiz 1
-  const GOOGLE_SHEET_CSV_URL_2 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=329704009&single=true&output=csv"; // URL for Quiz 2
+  const GOOGLE_SHEET_CSV_URL_1 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=329704009&single=true&output=csv"; // URL for Quiz 1
+  const GOOGLE_SHEET_CSV_URL_2 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=0&single=true&output=csv"; // URL for Quiz 2
 
   return (
     <Router>
       <div className="App">
         <Routes>
-        <Route path="/" element={
+          <Route path="/" element={
             <div>
               <h1>Air Quality Quizzes</h1>
               <Link to="/basic">Air Quality Basics Quiz</Link> <br /> {/* Link to Basic Quiz */}
               <Link to="/">Air Quality Advanced Quiz (Coming soon...) </Link> {/* Link to Advanced Quiz */}
             </div>
-          } />
-          <Route path="/basic" element={<Quiz googleSheetURL={GOOGLE_SHEET_CSV_URL_2} quizTitle="Air Quality Basics Quiz" />} />
-          {/* <Route path="/advanced" element={<Quiz googleSheetURL={GOOGLE_SHEET_CSV_URL_1} quizTitle="Air Quality Advanced Quiz" />} /> */}
+            }
+          />
+          
+          <Route path="/basic" element={<Quiz googleSheetURL={GOOGLE_SHEET_CSV_URL_1} quizTitle="Air Quality Basics Quiz" />} />
+          {/* <Route path="/advanced" element={<Quiz googleSheetURL={GOOGLE_SHEET_CSV_URL_2} quizTitle="Air Quality Advanced Quiz" />} /> */}
           {/* Add more routes as needed */}
         </Routes>
       </div>
     </Router>
   );
-
 }
 
 export default App;

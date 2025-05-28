@@ -2,6 +2,8 @@
 
 Answer the quiz on: [AirQualityQuiz](https://urbanemissionsinfo.github.io/airqualityquiz/)
 
+The slide doc to this app can be found here: [Slides](https://docs.google.com/presentation/d/1Q-Ula2IBLRKel3bROX5Ly3UaF7uEDVBFx6Wfe9IGZ7U/edit?usp=sharing)
+
 ![alt text](image.png)
 
 ## Deploy on GH pages
