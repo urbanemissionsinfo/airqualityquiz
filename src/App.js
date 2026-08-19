@@ -132,7 +132,7 @@ function Quiz({ googleSheetURL, quizTitle }) {
             question_ids: qids,
             responses: responses,
         };
-        const response = await axios.post('http://127.0.0.1:8000/api/saveScore', scoreData); 
+        const response = await axios.post('https://airqualityquiz-backend.onrender.com/api/saveScore', scoreData); 
         console.log('Score saved successfully:', response.data); 
     } catch (error) {
         console.error('Error saving score:', error);
