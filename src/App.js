@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { HashRouter as Router, Routes, Route, Link} from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import axios from 'axios';
 
 // Helper function to convert CSV to questions (shared by both quizzes)
@@ -34,8 +34,9 @@ function csvToQuestions(csvString) {
   // Shuffle the questions array once (using Fisher-Yates algorithm)
   for (let i = questions.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [questions[i], questions[j]] = [questions[j], questions[i]];}
-  const selected_questions = questions.slice(0,10);
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+  const selected_questions = questions.slice(0, 10);
   return selected_questions;
 }
 
@@ -44,16 +45,13 @@ function csvToScores(csvString) {
   const lines = csvString.trim().split("\n");
   if (lines.length < 2) return [];
   
-  // Get headers and normalize them to lowercase to make finding indices easier
   const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace("\r", ""));
   const scores = [];
   
-  // Find column indices dynamically
   const quizIdx = headers.indexOf('quizName');
   const scoreIdx = headers.indexOf('score');
   const dateIdx = headers.indexOf('date');
   
-  // Look for 'name' first; if it doesn't exist, look for 'user'
   let nameIdx = headers.indexOf('name');
   if (nameIdx === -1) {
     nameIdx = headers.indexOf('user');
@@ -62,7 +60,6 @@ function csvToScores(csvString) {
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(",");
     
-    // Ensure the line has enough data columns before trying to parse
     if (values.length >= 3) { 
       scores.push({
         quiz: quizIdx !== -1 && values[quizIdx] ? values[quizIdx].replace("\r", "") : '',
@@ -84,7 +81,6 @@ function Leaderboard({ googleSheetURL }) {
 
   useEffect(() => {
     setLoading(true);
-    // Fetch directly from the Google Sheet just like the Quiz component
     fetch(googleSheetURL, {
       headers: { "content-type": "text/csv;charset=UTF-8" },
       method: "GET",
@@ -106,23 +102,19 @@ function Leaderboard({ googleSheetURL }) {
       });
   }, [googleSheetURL]);
 
-  // Filter and sort the scores
   const filteredScores = scores.filter(entry => {
     const entryName = entry.name || "";
     
-    // Filter out entries where the name starts with a number (IP addresses) or is empty
     if (!entryName || /^\d/.test(entryName)) {
       return false;
     }
 
-    // Date Filtering
     if (entry.date) {
       const entryDate = new Date(entry.date);
       if (startDate && new Date(startDate) > entryDate) {
         return false;
       }
       if (endDate) {
-        // Set to the very end of the selected end date
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         if (end < entryDate) {
@@ -132,7 +124,7 @@ function Leaderboard({ googleSheetURL }) {
     }
 
     return true;
-  }).sort((a, b) => b.score - a.score); // Sort descending by score
+  }).sort((a, b) => b.score - a.score);
 
   return (
     <div className="quiz-container">
@@ -163,43 +155,40 @@ function Leaderboard({ googleSheetURL }) {
         <h2>Loading leaderboard...</h2>
       ) : (
         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-        <table 
-          style={{ 
-            width: "80%", 
-            borderCollapse: "collapse", 
-            textAlign: "left", 
-            margin: "20px 0" 
-          }}
-        >
-        
-          <thead>
-            <tr style={{ borderBottom: "2px solid #ccc" }}>
-              <th style={{ padding: "15px" }}>Rank</th>
-              <th style={{ padding: "15px" }}>Name</th>
-              <th style={{ padding: "15px" }}>Score</th>
-              {/* <th style={{ padding: "10px" }}>Quiz</th> */}
-              <th style={{ padding: "15px" }}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredScores.length > 0 ? (
-              filteredScores.map((entry, index) => (
-                <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "15px" }}>{index + 1}</td>
-                  <td style={{ padding: "15px" }}>{entry.name}</td>
-                  <td style={{ padding: "15px" }}>{entry.score}</td>
-                  {/* <td style={{ padding: "10px" }}>{entry.quiz}</td> */}
-                  <td style={{ padding: "15px" }}>{entry.date ? new Date(entry.date).toLocaleDateString() : "N/A"}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" style={{ padding: "10px", textAlign: "center" }}>No results found for the selected dates.</td>
+          <table 
+            style={{ 
+              width: "80%", 
+              borderCollapse: "collapse", 
+              textAlign: "left", 
+              margin: "20px 0" 
+            }}
+          >
+            <thead>
+              <tr style={{ borderBottom: "2px solid #ccc" }}>
+                <th style={{ padding: "15px" }}>Rank</th>
+                <th style={{ padding: "15px" }}>Name</th>
+                <th style={{ padding: "15px" }}>Score</th>
+                <th style={{ padding: "15px" }}>Date</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredScores.length > 0 ? (
+                filteredScores.map((entry, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "15px" }}>{index + 1}</td>
+                    <td style={{ padding: "15px" }}>{entry.name}</td>
+                    <td style={{ padding: "15px" }}>{entry.score}</td>
+                    <td style={{ padding: "15px" }}>{entry.date ? new Date(entry.date).toLocaleDateString() : "N/A"}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ padding: "10px", textAlign: "center" }}>No results found for the selected dates.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <Link to="/"><button>Back to Home</button></Link>
@@ -249,68 +238,53 @@ function Quiz({ googleSheetURL, quizTitle }) {
       .catch((error) => {
         console.error("Error fetching CSV file:", error);
         setLoading(false); 
-      })
+      });
   };
 
-  useEffect(() => {
-    console.log("qids in useEffect:", qids); 
-  }, [qids]); 
-
   const optionClicked = (isCorrect, option) => {
-    if (!selectedOption) {
-      responses.push(option.id);
-    }
+    if (selectedOption) return; // Prevent multiple selections per question
+
+    setResponses(prev => [...prev, option.id]);
     
     if (isCorrect) {
-        if (!selectedOption) { 
-          setScore(score + 1);
-          setFeedback("Correct :) !");
-        }
-      } else {setFeedback("Incorrect :( ");}  
+      setScore(prev => prev + 1);
+      setFeedback("Correct :) !");
+    } else {
+      setFeedback("Incorrect :( ");
+    }  
     
     setSelectedOption(option); 
-    console.log(responses);
     setShowNextButton(true); 
   };
 
   const goToNextQuestion = () => {
     if (currentQuestion + 1 < questions.length) {
-        setCurrentQuestion(currentQuestion + 1);
-        setSelectedOption(null);
-        setFeedback(null);
-        setShowNextButton(false); 
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedOption(null);
+      setFeedback(null);
+      setShowNextButton(false); 
     } else {
-        saveScore(userName); 
-        setShowResults(true);
-        setFeedback(null);
-        setShowNextButton(false);
+      saveScore(userName); 
+      setShowResults(true);
+      setFeedback(null);
+      setShowNextButton(false);
     }
   };
 
   const saveScore = async (name) => {
-    console.log(qids);
     try {
-        const scoreData = {
-            quizName: quizTitle,
-            score: score,
-            name: name?.trim() || null,
-            date: new Date().toISOString(),
-            question_ids: qids,
-            responses: responses,
-        };
-        const response = await axios.post('https://airqualityquiz-backend.onrender.com/api/saveScore', scoreData); 
-        console.log('Score saved successfully:', response.data); 
+      const scoreData = {
+        quizName: quizTitle,
+        score: score,
+        name: name?.trim() || null,
+        date: new Date().toISOString(),
+        question_ids: qids,
+        responses: responses,
+      };
+      const response = await axios.post('https://airqualityquiz-backend.onrender.com/api/saveScore', scoreData); 
+      console.log('Score saved successfully:', response.data); 
     } catch (error) {
-        console.error('Error saving score:', error);
-        if (error.response) {
-            console.error("Response data:", error.response.data);
-            console.error("Response status:", error.response.status);
-            console.error("Response headers:", error.response.headers);
-        } else if (error.request) {
-            console.error("Request:", error.request);
-        } else {
-            console.error("Error message:", error.message);
-        }
+      console.error('Error saving score:', error);
     }
   };
 
@@ -327,7 +301,7 @@ function Quiz({ googleSheetURL, quizTitle }) {
   return (
     <div className="quiz-container">
       <h1>{quizTitle}</h1> 
-      <p> Each quiz has 10 questions selected from a pool of questions. Participants are encouraged to take the test multiple times</p>
+      <p>Each quiz has 10 questions selected from a pool of questions. Participants are encouraged to take the test multiple times</p>
       
       {loading ? (<h2>Loading quiz...</h2>) : (
         !hasStarted ? (
@@ -363,7 +337,7 @@ function Quiz({ googleSheetURL, quizTitle }) {
                   {(score / questions.length) * 100}%)
                 </h2>
                 <br />
-                <button onClick={() => restartGame()}>Restart game</button> <br></br>
+                <button onClick={() => restartGame()}>Restart game</button> <br />
                 <Link to="/"><button>Home</button></Link> <br /> 
               </div>  
             ) : (
@@ -373,25 +347,46 @@ function Quiz({ googleSheetURL, quizTitle }) {
                 </h2>
                 <h3 className="question-text">{questions[currentQuestion]?.text}</h3>
                 <ul>
-                  {questions[currentQuestion]?.options.map((option) => (
-                    <li key={option.id} onClick={() => (optionClicked(option.isCorrect, option))}>
-                      {option.text}
-                    </li>
-                  ))}
+                  {questions[currentQuestion]?.options.map((option) => {
+                    const isSelected = selectedOption?.id === option.id;
+                    
+                    // Dynamic background: light green if selected & correct, light red if selected & wrong
+                    let bgColor = "rgba(255, 255, 255, 0.86)";
+                    if (isSelected) {
+                      bgColor = option.isCorrect ? "#a8e6cf" : "#ff8b94";
+                    }
+
+                    return (
+                      <li
+                        key={option.id}
+                        onClick={() => optionClicked(option.isCorrect, option)}
+                        style={{
+                          backgroundColor: bgColor,
+                          cursor: selectedOption ? "default" : "pointer",
+                          transform: isSelected ? "scale(1.02)" : "scale(1)",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        {option.text}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
-             {/* Feedback */}
+            
+            {/* Feedback */}
             {feedback && !showResults && (
-                <div className="feedback">
-                    <p>{feedback}</p>
-                    <p>Correct Answer: {questions[currentQuestion]?.options.find(opt => opt.isCorrect)?.text}</p>
-                    <p>{questions[currentQuestion]?.answer_explanation}</p>
-                </div>
+              <div className="feedback">
+                <p>{feedback}</p>
+                <p>Correct Answer: {questions[currentQuestion]?.options.find(opt => opt.isCorrect)?.text}</p>
+                <p>{questions[currentQuestion]?.answer_explanation}</p>
+              </div>
             )}
+
             {/* Next Question Button */}
             {showNextButton && !showResults && ( 
-                  <button onClick={goToNextQuestion}>Next Question</button>
+              <button onClick={goToNextQuestion}>Next Question</button>
             )}
           </>
         )
@@ -403,8 +398,6 @@ function Quiz({ googleSheetURL, quizTitle }) {
 // APP COMPONENT
 function App() {
   const GOOGLE_SHEET_CSV_URL_1 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=329704009&single=true&output=csv"; 
-  
-  // ⚠️ IMPORTANT: Replace this URL with the actual published CSV URL for your scores/leaderboard sheet!
   const GOOGLE_SHEET_SCORES_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzzNg3HDQK3vUKpEnIwOREwa-SeRIcfYoECkL1qwivnChSUy5xrI7vE8Gpipuo_TxX6YDerL97rfGG/pub?gid=1164938647&single=true&output=csv"; 
 
   return (
@@ -418,12 +411,9 @@ function App() {
               <Link to="/">Air Quality Advanced Quiz (Coming soon...) </Link> <br /><br />
               <Link to="/leaderboard"><button>View Leaderboard</button></Link> 
             </div>
-            }
+          }
           />
-          
           <Route path="/basic" element={<Quiz googleSheetURL={GOOGLE_SHEET_CSV_URL_1} quizTitle="Air Quality Basics Quiz" />} />
-          
-          {/* ✅ Pass the Scores CSV URL down to the Leaderboard component */}
           <Route path="/leaderboard" element={<Leaderboard googleSheetURL={GOOGLE_SHEET_SCORES_URL} />} />
         </Routes>
       </div>
